@@ -16,9 +16,8 @@ return new class extends Migration
         Schema::create('appointment_records', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('booking_id');
-            $table->string('status')->default('confirmed');
+            $table->enum('status', ['confirmed', 'cancelled'])->default('confirmed'); 
             $table->timestamps();
-        
             $table->foreign('booking_id')->references('BookingId')->on('bookings')->onDelete('cascade');
         });
     }

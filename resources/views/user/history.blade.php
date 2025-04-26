@@ -52,24 +52,24 @@
                                     </thead>
                                     <tbody>
                                         @foreach($bookings as $booking)
-                                            <tr>
-                                                <td>{{ $booking->patient->user->name ?? 'N/A' }}</td>
-                                                <td>{{ $booking->date }}</td>
-                                                <td>{{ $booking->time }}</td>
-                                                <td>{{ $booking->doctor->firstname }} {{ $booking->doctor->lastname }}</td>
-                                                <td>{{ ucfirst($booking->status) }}</td>
-                                                <td>
-                                                    @if($booking->status == 'pending')
-                                                        <form action="{{ route('booking.cancel', ['id' => $booking->BookingId]) }}" method="POST">
-                                                            @csrf
-                                                            @method('DELETE')
-                                                            <button class="btn btn-sm btn-danger">Cancel</button>
-                                                        </form>
-                                                    @else
-                                                        <span class="text-muted"></span>
-                                                    @endif
-                                                </td>
-                                            </tr>
+                                        <tr>
+                                            <td>{{ ($booking->patient->user->name) }}</td> 
+                                            <td>{{ \Carbon\Carbon::parse($booking->date)->format('F d, Y') }}</td>
+                                            <td>{{ \Carbon\Carbon::parse($booking->time)->format('g:i A') }}</td>
+                                            <td>{{ ($booking->doctor->firstname) }} {{ ($booking->doctor->lastname) }}</td> 
+                                            <td>{{ ucfirst($booking->status) }}</td> 
+                                            <td>
+                                                @if($booking->status == 'pending')
+                                                    <form action="{{ route('booking.cancel', $booking->BookingId) }}" method="POST" onsubmit="return confirm('Are you sure you want to cancel this appointment?');">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="btn btn-danger btn-sm">Cancel</button>
+                                                    </form>
+                                                @else
+                                                    <span class="text-muted">No Actions</span>
+                                                @endif
+                                            </td>
+                                        </tr>
                                         @endforeach
                                     </tbody>
                                 </table>

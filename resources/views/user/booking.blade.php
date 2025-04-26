@@ -35,7 +35,7 @@
 
         <div class="mb-3">
             <label for="concern" class="form-label">Your Concern</label>
-            <input name="concern" id="concern" class="form-control" rows="3" required></input>
+            <input type="text" name="concern" id="concern" class="form-control" rows="3" required></input>
         </div>
 
         <button type="submit" class="btn btn-primary">Book Now</button>

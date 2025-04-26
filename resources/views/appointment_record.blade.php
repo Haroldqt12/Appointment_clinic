@@ -14,15 +14,22 @@
         </tr>
     </thead>
     <tbody>
-        @foreach($records as $record)
-    <tr>
-        <td>{{ $record->booking->patient->user->name ?? 'N/A' }}</td>
-        <td>{{ $record->booking->doctor->firstname }} {{ $record->booking->doctor->lastname }}</td>
-        <td>{{ $record->booking->date }}</td>
-        <td>{{ $record->booking->time }}</td>
-        <td>{{ $record->booking->concern }}</td>
-        <td>{{ ucfirst($record->status) }}</td>
-    </tr>
-    @endforeach
+@foreach ($bookings as $booking)
+        <tr>
+            <td>{{ $booking->patient->user->name }}</td> 
+            <td>{{ $booking->doctor->firstname }} {{ $booking->doctor->lastname }}</td>
+            <td>{{ \Carbon\Carbon::parse($booking->date)->format('F d, Y') }}</td>
+            <td>{{ \Carbon\Carbon::parse($booking->time)->format('g:i A') }}</td>
+            <td>{{ $booking->concern }}</td>
+            <td>
+                @if($booking->status == 'cancelled')
+                    <span class="badge bg-danger">Cancelled</span>
+                @elseif($booking->status == 'confirmed')
+                    <span class="badge bg-success">Confirmed</span>
+                @endif
+            </td>
+        </tr>
+@endforeach
+
 </table>
 @endsection

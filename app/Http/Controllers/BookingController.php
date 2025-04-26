@@ -37,14 +37,12 @@ class BookingController extends Controller
             'concern' => 'required|string|max:255',
         ]);
 
-        // Retrieve the patient linked to the authenticated user
         $patient = Patient::where('user_id', Auth::id())->first();
 
         if (!$patient) {
             return redirect()->route('AccountDetails')->with('error', 'Please complete your patient information first.');
         }
 
-        // Create a new booking
         Booking::create([
             'patient_id' => $patient->id,
             'doctor_id' => $request->doctor_id,
@@ -72,23 +70,22 @@ class BookingController extends Controller
     {
         $booking = Booking::findOrFail($id);
 
-        // Ensure the user owns the booking
-        if ($booking->patient->user_id !== auth()->id()) {
-            abort(403);
-        }
+        $booking->status = 'cancelled';
+        $booking->save();
 
-        $booking->delete();
+        AppointmentRecord::create([
+            'booking_id' => $booking->BookingId,
+            'status' => 'cancelled',
+        ]);
 
-        return redirect()->back()->with('success', 'Appointment cancelled.');
+        return redirect()->back()->with('success', 'Appointment cancelled successfully.');
     }
 
-    // Function to get available time slots
     public function getAvailableTimeSlots(Request $request)
     {
         $doctorId = $request->query('doctor_id');
         $date = $request->query('date');
 
-        // Fetch the doctor's availability based on date and doctor
         $availability = DoctorAvailability::where('DoctorId', $doctorId)
             ->where('day', date('l', strtotime($date)))
             ->first();
@@ -97,15 +94,13 @@ class BookingController extends Controller
             return response()->json([]);
         }
 
-        // Generate available time slots (assuming 30-minute intervals)
         $startTime = Carbon::createFromFormat('H:i:s', $availability->start_time);
         $endTime = Carbon::createFromFormat('H:i:s', $availability->end_time);
 
         $slots = [];
         while ($startTime < $endTime) {
-            // Exclude lunch time (12:00 PM to 1:00 PM)
             if ($startTime->format('H:i') >= '12:00' && $startTime->format('H:i') < '13:00') {
-                $startTime->addMinutes(30); // Skip the lunch hour
+                $startTime->addMinutes(30); 
                 continue;
             }
 
@@ -140,8 +135,11 @@ class BookingController extends Controller
 
     public function records()
     {
-        $records = AppointmentRecord::with('booking.patient.user', 'booking.doctor')->get();
-        return view('appointment_record', compact('records'));
+        $bookings = Booking::with('patient.user', 'doctor')
+                    ->whereIn('status', ['confirmed', 'cancelled'])
+                    ->get();
+
+        return view('appointment_record', compact('bookings'));
     }
 
 }
