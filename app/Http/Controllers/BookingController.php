@@ -11,6 +11,7 @@ use App\Models\AppointmentRecord;
 use App\Models\User;
 use App\Notifications\NewAppointmentNotification;
 use App\Notifications\AppointmentConfirmedNotification;
+use App\Notifications\RescheduledAppointmentNotification;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Support\Facades\Auth;
@@ -130,7 +131,6 @@ class BookingController extends Controller
             return response()->json([]);
         }
     
-        // Generate all possible slots
         $startTime = Carbon::createFromFormat('H:i:s', $availability->start_time);
         $endTime = Carbon::createFromFormat('H:i:s', $availability->end_time);
     
@@ -146,7 +146,6 @@ class BookingController extends Controller
             $startTime->addMinutes(30);
         }
     
-        //  Get all confirmed bookings
         $bookedSlots = Booking::where('doctor_id', $doctorId)
             ->where('date', $date)
             ->where('status', 'confirmed')
@@ -192,25 +191,53 @@ class BookingController extends Controller
         return view('appointment_record', compact('records'));
     }
     public function search(Request $request)
-{
-    $query = $request->input('search');
+    {
+        $query = $request->input('search');
 
-    $records = AppointmentRecord::with('booking.patient.user', 'booking.doctor')
-        ->whereHas('booking.patient.user', function ($subQuery) use ($query) {
-            $subQuery->where('name', 'LIKE', "%{$query}%");
-        })
-        ->orWhereHas('booking.doctor', function ($subQuery) use ($query) {
-            $subQuery->where('firstname', 'LIKE', "%{$query}%")
-                     ->orWhere('lastname', 'LIKE', "%{$query}%");
-        })
-        ->orWhereHas('booking', function ($subQuery) use ($query) {
-            $subQuery->where('concern', 'LIKE', "%{$query}%");
-        })
-        ->paginate(10)
-        ->appends(['search' => $query]);
+        $records = AppointmentRecord::with('booking.patient.user', 'booking.doctor')
+            ->whereHas('booking.patient.user', function ($subQuery) use ($query) {
+                $subQuery->where('name', 'LIKE', "%{$query}%");
+            })
+            ->orWhereHas('booking.doctor', function ($subQuery) use ($query) {
+                $subQuery->where('firstname', 'LIKE', "%{$query}%")
+                        ->orWhere('lastname', 'LIKE', "%{$query}%");
+            })
+            ->orWhereHas('booking', function ($subQuery) use ($query) {
+                $subQuery->where('concern', 'LIKE', "%{$query}%");
+            })
+            ->paginate(10)
+            ->appends(['search' => $query]);
 
-    return view('appointment_record', compact('records'));
-}
+        return view('appointment_record', compact('records'));
+    }
+    public function reschedule(Request $request, $id)
+    {
+        $request->validate([
+            'date' => 'required|date',
+            'time' => 'required|date_format:H:i',
+            'reason' => 'required|string',
+        ]);
+
+        $booking = Booking::findOrFail($id);
+        $originalDate = $booking->date;
+        $originalTime = $booking->time;
+
+        $booking->update([
+            'date' => $request->date,
+            'time' => $request->time,
+            'reason' => $request->reason,
+            'status' => 'confirmed', 
+        ]);
+
+        AppointmentRecord::create([
+            'booking_id' => $booking->BookingId,
+            'status' => 'confirmed'
+        ]);
+
+        $booking->patient->user->notify(new RescheduledAppointmentNotification($booking, $request->reason, $originalDate, $originalTime));
+
+        return redirect()->route('appointmentlist')->with('success', 'Appointment has been rescheduled and confirmed!');
+    }
 
 }
 

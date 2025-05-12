@@ -3,6 +3,7 @@
 use App\Models\AddDoctor;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Mail;
 use App\Http\Controllers\LogoutController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\PatientController;
@@ -40,6 +41,8 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 
     Route::get('/appointmentlist', [BookingController::class, 'index'])->name('appointmentlist');
     Route::post('/appointmentlist/{id}/confirm', [BookingController::class, 'confirm'])->name('appointmentlist.confirm');
+    Route::get('/appointmentlist/available-slots', [BookingController::class, 'getAvailableTimeSlots'])->name('appointmentlist.available-slots');
+
 
     Route::get('/appointmentrecords', [BookingController::class, 'records'])->name('appointmentrecord');
     Route::get('/appointmentrecords/search', [BookingController::class, 'search'])->name('appointmentrecord.search');
@@ -95,6 +98,10 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         return view('appointment.appointment_list'); 
     })->name('appointment.appointment_list');
 
+    //Rescheduling appointment
+    Route::post('/appointmentlist/reschedule/{id}', [BookingController::class, 'reschedule'])->name('appointment.reschedule');    
+
+
     Route::post('/logout', [LogoutController::class, 'logout'])->name('logout');
 });
 
@@ -117,7 +124,8 @@ Route::middleware(['auth', 'role:user'])->group(function () {
     Route::get('/booking/create', [BookingController::class, 'create'])->name('bookings.create');
     Route::post('/booking', [BookingController::class, 'store'])->name('bookings.store');
     Route::get('/booking/available-slots', [BookingController::class, 'getAvailableTimeSlots'])->name('booking.available-slots');
-
+    Route::get('/api/available-times', [BookingController::class, 'getAvailableTimeSlots']);
+    
     Route::get('/MedicalForm', function () {
         return view('transaction.medical_form'); 
     })->name('MedicalForm');

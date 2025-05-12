@@ -13,13 +13,13 @@
             <table class="table table-hover">
                 <thead class="bg-light">
                     <tr>
-                        <th><i class="fas fa-user"></i> Patient</th>
-                        <th><i class="fas fa-user-md"></i> Doctor</th>
-                        <th><i class="fas fa-calendar-day"></i> Date</th>
-                        <th><i class="fas fa-clock"></i> Time</th>
-                        <th><i class="fas fa-comment-medical"></i> Concern</th>
-                        <th><i class="fas fa-info-circle"></i> Status</th>
-                        <th><i class="fas fa-cogs"></i> Action</th>
+                        <th>Patient</th>
+                        <th>Doctor</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Concern</th>
+                        <th>Status</th>
+                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -38,15 +38,21 @@
                         </td>
                         <td>
                             @if($booking->status == 'pending')
-                            <form 
-                                hx-post="{{ route('appointmentlist.confirm', ['id' => $booking->BookingId]) }}"
-                                hx-target="body"
-                                hx-push-url="true">
-                                @csrf
-                                <button type="submit" class="btn btn-success btn-sm">
-                                    <i class="fas fa-check"></i> Confirm
+                            <div class="d-flex gap-2">
+                                <form 
+                                    method="POST"
+                                    action="{{ route('appointmentlist.confirm', ['id' => $booking->BookingId]) }}">
+                                    @csrf
+                                    <button type="submit" class="btn btn-success btn-sm">
+                                        <i class="fas fa-check"></i> Confirm
+                                    </button>
+                                </form>
+
+                                <button class="btn btn-secondary btn-sm"
+                                    onclick="openRescheduleModal({{ $booking->BookingId }}, {{ $booking->doctor_id }}, '{{ $booking->date }}')">
+                                    <i class="fas fa-calendar-alt"></i> Reschedule
                                 </button>
-                            </form>
+                            </div>
                             @else
                                 <span class="badge bg-success"><i class="fas fa-check-circle"></i> Confirmed</span>
                             @endif
@@ -61,4 +67,88 @@
         @endif
     </div>
 </div>
+
+<!-- Reschedule Modal -->
+<div class="modal fade" id="rescheduleModal" tabindex="-1" aria-labelledby="rescheduleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form id="rescheduleForm" method="POST">    
+        @csrf
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Reschedule Appointment</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="booking_id" id="bookingId">
+                    <div class="mb-3">
+                        <label for="rescheduleDate" class="form-label">New Date</label>
+                        <input type="date" class="form-control" name="date" id="rescheduleDate" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="availableTimes" class="form-label">Available Time</label>
+                        <select class="form-select" name="time" id="availableTimes" required>
+                            <option value="">Select a time</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="rescheduleReason" class="form-label">Reason</label>
+                        <textarea name="reason" id="rescheduleReason" class="form-control" rows="3" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Confirm Reschedule</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<script>
+    let doctorId = null;
+    const dateInput = document.getElementById('rescheduleDate');
+    const timeSelect = document.getElementById('availableTimes');
+    const modalForm = document.getElementById('rescheduleForm');
+
+    function openRescheduleModal(bookingId, docId, currentDate) {
+        doctorId = docId;
+        document.getElementById('bookingId').value = bookingId;
+        dateInput.value = currentDate;
+
+        modalForm.action = `/appointmentlist/reschedule/${bookingId}`;
+
+        fetchAvailableTimes(currentDate);
+
+        const modal = new bootstrap.Modal(document.getElementById('rescheduleModal'));
+        modal.show();
+    }
+
+    dateInput.addEventListener('change', () => {
+        if (doctorId && dateInput.value) {
+            fetchAvailableTimes(dateInput.value);
+        }
+    });
+
+    function fetchAvailableTimes(date) {
+        timeSelect.innerHTML = '<option>Loading...</option>';
+        fetch(`/appointmentlist/available-slots?doctor_id=${doctorId}&date=${date}`)
+            .then(response => response.json())
+            .then(times => {
+                timeSelect.innerHTML = '';
+                if (times.length) {
+                    times.forEach(time => {
+                        const option = document.createElement('option');
+                        option.value = time;
+                        option.textContent = time;
+                        timeSelect.appendChild(option);
+                    });
+                } else {
+                    timeSelect.innerHTML = '<option>No available slots</option>';
+                }
+            });
+    }
+</script>
 @endsection

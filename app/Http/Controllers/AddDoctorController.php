@@ -84,7 +84,7 @@ class AddDoctorController extends Controller
         return view('doctor_record', compact('DoctorRecord'));
     }
 
-    public function edit($DoctorId)
+    public function edit($DoctorId) 
     {
         
         $doctor = AddDoctor::find($DoctorId);
