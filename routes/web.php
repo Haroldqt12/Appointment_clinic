@@ -15,7 +15,7 @@ use App\Http\Controllers\AuthenticatedSessionController;
 use App\Http\Controllers\DashboardController;
 
 Route::get('/', function () {
-    return redirect()->route('login'); // Redirect to login page by default
+    return redirect()->route('login'); 
 });
 
 Route::get('/redirect', function () {

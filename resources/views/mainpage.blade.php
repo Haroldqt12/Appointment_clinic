@@ -25,7 +25,10 @@
                         <div class="mb-2" style="color: #0e2238;"><i class="fas fa-user-md fa-2x"></i></div>
                         <h5>Doctors</h5>
                         <p class="fs-4 fw-bold">{{ $doctorCount }}</p>
-                        <a href="{{ route('DoctorRecord') }}" class="btn btn-outline-primary btn-sm">Manage Doctors</a>
+                        <a href="{{ route('DoctorRecord') }}" class="btn btn-outline-primary btn-sm"
+                        hx-boost="true"
+                        hx-push-url="true"
+                        >Manage Doctors</a>
                     </div>
                 </div>
                 <div class="col-md-4">
@@ -33,7 +36,10 @@
                         <div class="text-success mb-2"><i class="fas fa-calendar-check fa-2x"></i></div>
                         <h5>Appointments</h5>
                         <p class="fs-4 fw-bold">{{ $appointmentCount }}</p>
-                        <a href="{{ route('appointmentlist') }}" class="btn btn-outline-success btn-sm">View Appointments</a>
+                        <a href="{{ route('appointmentlist') }}" class="btn btn-outline-success btn-sm"
+                        hx-boost="true"
+                        hx-push-url="true"
+                        >View Appointments</a>
                     </div>
                 </div>
                 <div class="col-md-4">
@@ -41,7 +47,10 @@
                         <div class="text-secondary mb-2"><i class="fas fa-users fa-2x"></i></div>
                         <h5>Patients</h5>
                         <p class="fs-4 fw-bold">{{ $patientCount }}</p>
-                        <a href="{{ route('PatientList') }}" class="btn btn-outline-secondary btn-sm">View Patients</a>
+                        <a href="{{ route('PatientList') }}" class="btn btn-outline-secondary btn-sm"
+                        hx-boost="true"
+                        hx-push-url="true"
+                        >View Patients</a>
                     </div>
                 </div>
             </div>

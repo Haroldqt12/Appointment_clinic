@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use Illuminate\Http\Request; 
 use App\Models\Booking;
 use App\Models\Patient;
 use App\Models\AddDoctor;

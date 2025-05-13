@@ -49,7 +49,12 @@
                                 </form>
 
                                 <button class="btn btn-secondary btn-sm"
-                                    onclick="openRescheduleModal({{ $booking->BookingId }}, {{ $booking->doctor_id }}, '{{ $booking->date }}')">
+                                    onclick="openRescheduleModal(
+                                        {{ $booking->BookingId }},
+                                        {{ $booking->doctor_id }},
+                                        '{{ $booking->date }}',
+                                        '{{ \Carbon\Carbon::parse($booking->time)->format('H:i') }}'
+                                    )">
                                     <i class="fas fa-calendar-alt"></i> Reschedule
                                 </button>
                             </div>
@@ -78,20 +83,22 @@
                     <h5 class="modal-title">Reschedule Appointment</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body">       
                     <input type="hidden" name="booking_id" id="bookingId">
                     <div class="mb-3">
                         <label for="rescheduleDate" class="form-label">New Date</label>
                         <input type="date" class="form-control" name="date" id="rescheduleDate" required>
                     </div>
-
                     <div class="mb-3">
-                        <label for="availableTimes" class="form-label">Available Time</label>
+                        <label for="time" class="form-label">Time</label>
+                        <input type="time" class="form-control" id="currentTime" disabled>
+                    </div>
+                    <div class="mb-3">
+                        <label for="availableTimes" class="form-label">Reschedule To:</label>
                         <select class="form-select" name="time" id="availableTimes" required>
                             <option value="">Select a time</option>
                         </select>
                     </div>
-
                     <div class="mb-3">
                         <label for="rescheduleReason" class="form-label">Reason</label>
                         <textarea name="reason" id="rescheduleReason" class="form-control" rows="3" required></textarea>
@@ -107,16 +114,19 @@
 </div>
 
 
+<!-- JS Script -->
 <script>
     let doctorId = null;
     const dateInput = document.getElementById('rescheduleDate');
     const timeSelect = document.getElementById('availableTimes');
     const modalForm = document.getElementById('rescheduleForm');
+    const currentTimeInput = document.getElementById('currentTime');
 
-    function openRescheduleModal(bookingId, docId, currentDate) {
+    function openRescheduleModal(bookingId, docId, currentDate, currentTime) {
         doctorId = docId;
         document.getElementById('bookingId').value = bookingId;
-        dateInput.value = currentDate;
+        document.getElementById('rescheduleDate').value = currentDate;
+        document.getElementById('currentTime').value = currentTime;
 
         modalForm.action = `/appointmentlist/reschedule/${bookingId}`;
 
@@ -142,7 +152,12 @@
                     times.forEach(time => {
                         const option = document.createElement('option');
                         option.value = time;
-                        option.textContent = time;
+                        const formattedTime = new Date(`1970-01-01T${time}`).toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: true
+                        });
+                        option.textContent = formattedTime;
                         timeSelect.appendChild(option);
                     });
                 } else {
